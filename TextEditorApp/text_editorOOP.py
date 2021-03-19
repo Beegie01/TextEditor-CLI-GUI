@@ -5,18 +5,17 @@ if pkg not in os.sys.path:
     os.sys.path.append(pkg)
 
 # print(os.sys.path)
-from fave_app_funcs import num_inp, sentence_inp, ask_to_save, ask_next, file_path_inp
+from fave_app_funcs import num_inp, sentence_inp, ask_next
 
 
 class EditorApp:
 
     def __init__(self):
-        self.original_text = None   # for original text
-        self.labelled_text =  None   # for original text with labelled lines
-        self.old_text = []   # for discarded rows/lines
-        self.inserted_text = []   # for inserted new rows/lines
-        self.edited_text = []   # for replacement rows/lines
-
+        self.original_text = None  # for original text
+        self.labelled_text = None  # for original text with labelled lines
+        self.old_text = []  # for discarded rows/lines
+        self.inserted_text = []  # for inserted new rows/lines
+        self.edited_text = []  # for replacement rows/lines
 
     def label_lines(self):
         '''
@@ -24,10 +23,7 @@ class EditorApp:
         assigns the result to labelled text attribute
         '''
         # label each lines
-        self.labelled_text = {'line_'+str(ind):line for ind,line in enumerate(self.original_text)}
-        print("\nLine labels assigned!")
-
-
+        self.labelled_text = {'line_' + str(ind): line for ind, line in enumerate(self.original_text)}
 
     def view_file_text(self):
         '''
@@ -36,9 +32,8 @@ class EditorApp:
         each string corresponds to a line of text
         '''
         # display lines of file
-        for label,text in self.labelled_text.items():
+        for label, text in self.labelled_text.items():
             print("{l}:\t{t}\n".format(t=text, l=label))
-
 
     def add_or_edit(self):
         '''
@@ -53,37 +48,55 @@ class EditorApp:
                 continue
             return inp.lower()
 
-
     def insert_lines(self):
         '''
         '''
         while True:
 
             # user inputs the new text
-            prompt = "\nEnter new text below\nInsert Text>\t"
+            prompt = "\nPlease enter below the row of new text you want to insert\nInsert Text>\t"
             insr_text = sentence_inp(prompt)
 
             # determine the next line number
             # collecting the last lines
-            line_ind = re.findall(r"\d+", ', '.join([label for label in self.labelled_text.keys()]))
-            last_line = sorted([eval(ind) for ind in line_ind])[-1]
+            row_ind = re.findall(r"\d+", ', '.join([label for label in self.labelled_text.keys()]))
+            last_row = sorted([eval(ind) for ind in row_ind])[-1]
 
-            print(f"\n{dict(['line_'+str(last_line+1), insr_text])} Entered!")
-            prompt = "\nEnter yes to save inserted text\nOr no to discard insertion"
-            if not(ask_next(prompt)):
+            print(f"\n{dict([('line_' + str(last_row + 1), insr_text)])} Entered!")
+            prompt = "\nEnter yes to save inserted text\nOr no to discard inserted text"
+            if not (ask_next(prompt)):
                 continue
 
             # insert text at next line number
-            self.labelled_text['line_'+str(last_line+1)] = insr_text
+            self.labelled_text['line_' + str(last_row + 1)] = insr_text
 
             # store changes
-            self.inserted_text.append(('line_'+str(last_line+1), insr_text))
+            self.inserted_text.append(('line_' + str(last_row + 1), insr_text))
             break
+
+    def update_lines(self):
+        '''
+        '''
+        while True:
+            # prompt user for line number of bad text
+            prompt = "\nPlease enter below the row number of the text you want to change:\nRow Number>\t"
+
+            # collecting the first and last row numbers
+            row_ind = re.findall(r"\d+", ', '.join([label for label in self.labelled_text.keys()]))
+            first, last = sorted([eval(ind) for ind in row_ind])[0], sorted([eval(ind) for ind in row_ind])[-1]
+
+            # user inputs row number for old text
+            lim = (first, last + 1)
+            repl_row_num = num_inp(prompt, lim)
+
+            # user inputs the new text
+            prompt = "\nPlease enter replacement text below\nNew Text>\t"
+            repl_text = sentence_inp(prompt)
+
+            return repl_row_num, repl_text
 
     def save_changes(self, file_path):
         '''
         '''
         with open(file_path, 'r+', encoding='utf8') as hand:
-            hand.writelines([line for label,line in self.labelled_text.items()])
-
-        print("\n\nChanges has been saved to system file!")
+            hand.writelines([line for label, line in self.labelled_text.items()])
